@@ -1,0 +1,35 @@
+version 1.0;
+
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+
+import "../import/junos.xsl";
+
+match / {
+    <op-script-results> {
+
+        /* show interfaces extensive to capture description, status, duplex, and speed */
+        var $rpc1 = {
+            <get-interface-information> {
+                <extensive>;
+            }
+        }
+        var $int = jcs:invoke( $rpc1 );
+
+        /* show ethernet-switching interfaces to capture port, vlan id, and tagging */
+        var $rpc2 = {
+            <get-ethernet-switching-interface-details> {
+                <detail>;
+            }
+        }
+        var $eth = jcs:invoke( $rpc2 );
+
+        /* print the header */
+        <output> jcs:printf( "%-20s%-27s%-11s%-12s%-20s%-16s%-18s", "Port", "Description", "Status", "VLAN ID", "Tagging", "Duplex", "Speed");
+        
+        for-each ( $eth/l2ng-l2ald-iff-interface-entry[string-length(l2iff-interface-vlan-id) > 0] ) {
+                <output> jcs:printf( "%-20s%-27s%-11s%-12s%-20s%-16s%-18s", l2iff-interface-name, $int/physical-interface/link-level-type, $int/physical-interface/oper-status, l2iff-interface-vlan-id, l2iff-interface-vlan-member-tagness, $int/physical-interface/link-type, $int/physical-interface/speed);
+        }
+    }
+}
