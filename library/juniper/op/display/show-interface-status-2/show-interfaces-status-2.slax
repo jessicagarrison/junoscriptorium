@@ -1,4 +1,4 @@
-version 1.0;
+version 1.2;
 
 ns junos = "http://xml.juniper.net/junos/*/junos";
 ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
@@ -29,7 +29,10 @@ match / {
         <output> jcs:printf( "%-20s%-27s%-11s%-12s%-20s%-16s%-18s", "Port", "Description", "Status", "VLAN ID", "Tagging", "Duplex", "Speed");
         
         for-each ( $eth/l2ng-l2ald-iff-interface-entry[string-length(l2iff-interface-vlan-id) > 0] ) {
-                <output> jcs:printf( "%-20s%-27s%-11s%-12s%-20s%-16s%-18s", l2iff-interface-name, $int/physical-interface/link-level-type, $int/physical-interface/oper-status, l2iff-interface-vlan-id, l2iff-interface-vlan-member-tagness, $int/physical-interface/link-type, $int/physical-interface/speed);
+            var $etname = substring-before(l2iff-interface-name,".");
+            if (($int/physical-interface[name==$etname]/admin-status=="up") && ($int/physical-interface[name==$etname]/oper-status=="up")) {
+                <output> jcs:printf( "%-20s%-27s%-11s%-12s%-20s%-16s%-18s", l2iff-interface-name, $int/physical-interface[name==$etname]/link-level-type, $int/physical-interface[name==$etname]/oper-status, l2iff-interface-vlan-id, l2iff-interface-vlan-member-tagness, $int/physical-interface[name==$etname]/link-type, $int/physical-interface[name==$etname]/speed);
+            }
         }
     }
 }
