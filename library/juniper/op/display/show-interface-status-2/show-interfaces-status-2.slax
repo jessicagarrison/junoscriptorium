@@ -28,9 +28,16 @@ match / {
         /* print the header */
         <output> jcs:printf( "%-20s%-27s%-11s%-12s%-20s%-16s%-18s", "Port", "Description", "Status", "VLAN ID", "Tagging", "Duplex", "Speed");
         
+        /* for loop with the vlan ids, ignore the empty ones */
         for-each ( $eth/l2ng-l2ald-iff-interface-entry[string-length(l2iff-interface-vlan-id) > 0] ) {
+            
+            /* grabbing the name of the physical interface ignoring the .0 */
             var $etname = substring-before(l2iff-interface-name,".");
-            if (($int/physical-interface[name==$etname]/admin-status=="up") && ($int/physical-interface[name==$etname]/oper-status=="up")) {
+
+            /* confirmation of Admin and Link status, only print when both are up */
+            if (($int/physical-interface[name==$etname]/admin-status=="up") && ($int/physical-interface[name==$etname]/oper-status=="down")) {
+
+                /* print each line */
                 <output> jcs:printf( "%-20s%-27s%-11s%-12s%-20s%-16s%-18s", l2iff-interface-name, $int/physical-interface[name==$etname]/link-level-type, $int/physical-interface[name==$etname]/oper-status, l2iff-interface-vlan-id, l2iff-interface-vlan-member-tagness, $int/physical-interface[name==$etname]/link-type, $int/physical-interface[name==$etname]/speed);
             }
         }
